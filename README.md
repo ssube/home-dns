@@ -23,9 +23,11 @@ resource: "https://api.ipify.org?format=text"
 records:
 - cron: "@hourly"
   name: home.example.com.
+  ttl: 300
   zone: Z1ABCDEF123456
 - cron: "@daily"
   name: office.example.com.
+  ttl: 86400
   zone: Z1ABCDEF123456
 ```
 

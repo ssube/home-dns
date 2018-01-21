@@ -18,7 +18,7 @@ import (
 type Record struct {
 	Cron string
 	Name string
-	TTL  int
+	TTL  int64
 	Zone string
 }
 
@@ -27,23 +27,28 @@ type Config struct {
 	Source  string
 }
 
-func findPublicAddress(url string) []string {
+// FindPublicAddress fetches the public address from an external HTTP/S endpoint
+func FindPublicAddress(url string) ([]string, error) {
 	ipResp, ipError := http.Get(url)
 	if ipError != nil {
 		log.Printf("error getting public address: %s", ipError.Error())
+		return nil, ipError
 	}
+
 	defer ipResp.Body.Close()
 	body, bodyError := ioutil.ReadAll(ipResp.Body)
 	if bodyError != nil {
 		log.Printf("error getting response body: %s", bodyError.Error())
+		return nil, bodyError
 	}
 
 	return []string{
 		string(body),
-	}
+	}, nil
 }
 
-func loadConfig(path string) (*Config, error) {
+// LoadConfig loads the config data (source and records) from a YAML file
+func LoadConfig(path string) (*Config, error) {
 	data, readError := ioutil.ReadFile(path)
 	if readError != nil {
 
@@ -59,6 +64,7 @@ func loadConfig(path string) (*Config, error) {
 	return dest, nil
 }
 
+// Convert addresses to route53's special record type
 func mapResourceValues(values []string) []*route53.ResourceRecord {
 	records := make([]*route53.ResourceRecord, len(values))
 	for i, v := range values {
@@ -69,7 +75,8 @@ func mapResourceValues(values []string) []*route53.ResourceRecord {
 	return records
 }
 
-func updateRecord(conf *Config, r Record) {
+// UpdateRecord upserts a single record in a zone
+func UpdateRecord(conf *Config, r Record) {
 	// create a session
 	sess, sessError := session.NewSession()
 	if sessError != nil {
@@ -78,7 +85,12 @@ func updateRecord(conf *Config, r Record) {
 	}
 
 	// get current ip
-	values := findPublicAddress(conf.Source)
+	values, valueError := FindPublicAddress(conf.Source)
+	if valueError != nil {
+		log.Printf("error fetching external address: %s", valueError.Error())
+		return
+	}
+
 	log.Printf("updating '%s' to '%s'", r.Name, values)
 
 	// prepare the update
@@ -89,7 +101,7 @@ func updateRecord(conf *Config, r Record) {
 					Action: aws.String("UPSERT"),
 					ResourceRecordSet: &route53.ResourceRecordSet{
 						Name:            aws.String(r.Name),
-						TTL:             aws.Int64(300),
+						TTL:             aws.Int64(r.TTL),
 						Type:            aws.String("A"),
 						ResourceRecords: mapResourceValues(values),
 					},
@@ -104,6 +116,7 @@ func updateRecord(conf *Config, r Record) {
 	updateOutput, updateError := svc.ChangeResourceRecordSets(updates)
 	if updateError != nil {
 		log.Printf("error updating route53 records: %s", updateError.Error())
+		return
 	}
 
 	log.Printf("updated route53 records: %v", updateOutput)
@@ -113,7 +126,7 @@ func scheduleJob(conf *Config, c *cron.Cron, r Record) {
 	log.Printf("scheduling cron job for %s", r.Name)
 	c.AddFunc(r.Cron, func() {
 		log.Printf("executing cron job for %s", r.Name)
-		updateRecord(conf, r)
+		UpdateRecord(conf, r)
 	})
 }
 
@@ -125,7 +138,7 @@ func main() {
 
 	confPath := os.Args[1]
 	log.Printf("loading config from '%s'", confPath)
-	conf, confError := loadConfig(confPath)
+	conf, confError := LoadConfig(confPath)
 	if confError != nil {
 		log.Printf("error loading config: %s", confError.Error())
 		return
