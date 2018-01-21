@@ -53,7 +53,8 @@ func FindPublicAddress(url string) ([]string, error) {
 func LoadConfig(path string) (*Config, error) {
 	data, readError := ioutil.ReadFile(path)
 	if readError != nil {
-
+		log.Printf("error reading config: %s", readError.Error())
+		return nil, readError
 	}
 
 	dest := &Config{}
