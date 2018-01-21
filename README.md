@@ -39,6 +39,10 @@ Execute with the config file:
 AWS_PROFILE="home-root" ./home-dns config.yml
 ```
 
+## Disclaimer
+
+I do not know Go very well at all, so this code may be quite bad.
+
 ## Features
 
 - multiple zones and records
