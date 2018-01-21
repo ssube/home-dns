@@ -15,6 +15,7 @@ import (
 	yaml "gopkg.in/yaml.v2"
 )
 
+// Record defines a single record to upsert and the schedule for updates
 type Record struct {
 	Cron string
 	Name string
@@ -22,6 +23,7 @@ type Record struct {
 	Zone string
 }
 
+// Config defines the source endpoint and a set of records to update
 type Config struct {
 	Records []Record
 	Source  string
@@ -64,8 +66,8 @@ func LoadConfig(path string) (*Config, error) {
 	return dest, nil
 }
 
-// Convert addresses to route53's special record type
-func mapResourceValues(values []string) []*route53.ResourceRecord {
+// MapResourceValues converts address strings to route53's special record type
+func MapResourceValues(values []string) []*route53.ResourceRecord {
 	records := make([]*route53.ResourceRecord, len(values))
 	for i, v := range values {
 		records[i] = &route53.ResourceRecord{
@@ -103,7 +105,7 @@ func UpdateRecord(conf *Config, r Record) {
 						Name:            aws.String(r.Name),
 						TTL:             aws.Int64(r.TTL),
 						Type:            aws.String("A"),
-						ResourceRecords: mapResourceValues(values),
+						ResourceRecords: MapResourceValues(values),
 					},
 				},
 			},
@@ -122,7 +124,8 @@ func UpdateRecord(conf *Config, r Record) {
 	log.Printf("updated route53 records: %v", updateOutput)
 }
 
-func scheduleJob(conf *Config, c *cron.Cron, r Record) {
+// ScheduleJob adds a new record and update job to the cron pool
+func ScheduleJob(conf *Config, c *cron.Cron, r Record) {
 	log.Printf("scheduling cron job for %s", r.Name)
 	c.AddFunc(r.Cron, func() {
 		log.Printf("executing cron job for %s", r.Name)
@@ -149,7 +152,7 @@ func main() {
 	// schedule cron jobs
 	c := cron.New()
 	for _, r := range conf.Records {
-		scheduleJob(conf, c, r)
+		ScheduleJob(conf, c, r)
 	}
 	c.Start()
 
