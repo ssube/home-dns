@@ -34,7 +34,7 @@ records:
 Execute with the config file:
 
 ```shell
-./home-dns config.yml
+AWS_PROFILE="home-root" ./home-dns config.yml
 ```
 
 ## Features
