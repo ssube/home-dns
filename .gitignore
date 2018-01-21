@@ -4,6 +4,9 @@
 *.so
 *.dylib
 
+# Normal binary
+home-dns
+
 # Test binary, build with `go test -c`
 *.test
 
