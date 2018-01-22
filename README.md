@@ -18,7 +18,7 @@ go build
 The config file should have a `source` endpoint and each record to be updated:
 
 ```yaml
-resource: "https://api.ipify.org?format=text"
+source: "https://api.ipify.org?format=text"
 
 records:
 - cron: "@hourly"

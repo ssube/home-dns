@@ -136,7 +136,7 @@ func ScheduleJob(conf *Config, c *cron.Cron, r Record) {
 
 func main() {
 	if len(os.Args) < 2 {
-		log.Printf("not enough arguments: ./home-dns config.yml")
+		log.Printf("not enough arguments: %s config.yml", os.Args[0])
 		return
 	}
 
@@ -148,8 +148,6 @@ func main() {
 		return
 	}
 
-	// open a session (first, to fail early)
-
 	// schedule cron jobs
 	c := cron.New()
 	for _, r := range conf.Records {
@@ -159,7 +157,7 @@ func main() {
 
 	stop := make(chan os.Signal)
 	signal.Notify(stop, os.Interrupt, os.Kill)
-	<-stop
 
+	<-stop
 	c.Stop()
 }
