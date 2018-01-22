@@ -4,9 +4,6 @@
 *.so
 *.dylib
 
-# Normal binary
-home-dns
-
 # Test binary, build with `go test -c`
 *.test
 
@@ -15,6 +12,12 @@ home-dns
 
 # Project-local glide cache, RE: https://github.com/Masterminds/glide/issues/736
 .glide/
+
+# Misc Go
+bin/
+pkg/
+src/github.com/
+src/gopkg.in/
 
 # Config files
 config.yml

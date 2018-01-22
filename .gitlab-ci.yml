@@ -9,12 +9,14 @@ build:app:
   tags:
     - runner:k8s
   script:
-    - go get
-    - go build
+    - go get home-dns
+    - go build home-dns
   artifacts:
     paths:
-      - home-dns
+      - bin/home-dns
     expire_in: 1 hour
+  variables:
+    GOPATH: "${CI_PROJECT_DIR}"
 
 build:image:
   stage: image
