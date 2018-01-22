@@ -1,0 +1,39 @@
+# build the go app, then wrap it in an image
+stages:
+  - build
+  - image
+
+build:app:
+  stage: build
+  image: golang:1.6
+  tags:
+    - runner:k8s
+  script:
+    - go get
+    - go build
+  artifacts:
+    paths:
+      - home-dns
+    expire_in: 1 hour
+
+build:image:
+  stage: image
+  image: docker
+  services:
+    - docker:dind
+  tags:
+    - runner:k8s
+  script:
+    # prep secrets
+    - mkdir /root/.docker
+    - ln -s /secrets/docker /root/.docker/config.json
+    - docker info
+    # build it
+    - docker build -t $IMAGE_TAG .
+    - docker push $IMAGE_TAG
+  dependencies:
+    - build:app
+  variables:
+    DOCKER_DRIVER: overlay2
+    DOCKER_HOST: tcp://localhost:2375
+    IMAGE_TAG: ssube/home-dns:$CI_COMMIT_REF_SLUG
