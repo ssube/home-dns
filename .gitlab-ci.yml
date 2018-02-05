@@ -5,7 +5,7 @@ stages:
 
 build:app:
   stage: build
-  image: golang:1.6
+  image: golang:1.9
   tags:
     - runner:k8s
   script:
