@@ -15,6 +15,9 @@ build:app:
     paths:
       - bin/home-dns
     expire_in: 1 hour
+  cache:
+    key: "${CI_COMMIT_REF_SLUG}"
+    untracked: true
   variables:
     GOPATH: "${CI_PROJECT_DIR}"
 
