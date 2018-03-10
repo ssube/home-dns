@@ -16,8 +16,10 @@
 # Misc Go
 bin/
 pkg/
-src/github.com/
-src/gopkg.in/
+vendor/
 
 # Config files
 config.yml
+
+# Output
+home-dns

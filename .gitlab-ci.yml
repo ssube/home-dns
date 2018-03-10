@@ -5,15 +5,15 @@ stages:
 
 build:app:
   stage: build
-  image: golang:1.9
+  image: andrexus/golang-dep
   tags:
     - runner:k8s
   script:
-    - go get home-dns
-    - go build home-dns
+    - dep ensure
+    - go build
   artifacts:
     paths:
-      - bin/home-dns
+      - home-dns
     expire_in: 1 hour
   cache:
     key: "${CI_COMMIT_REF_SLUG}"
