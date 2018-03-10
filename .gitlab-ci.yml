@@ -19,7 +19,7 @@ build:app:
     key: "${CI_COMMIT_REF_SLUG}"
     untracked: true
   variables:
-    GOPATH: "${CI_PROJECT_DIR}"
+    GOPATH: /build
 
 build:image:
   stage: image
