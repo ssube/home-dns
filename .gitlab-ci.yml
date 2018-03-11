@@ -9,7 +9,7 @@ build:app:
   tags:
     - runner:k8s
   script:
-    - dep ensure
+    - time dep ensure
     - go build
   artifacts:
     paths:
