@@ -1,16 +1,21 @@
 # build the go app, then wrap it in an image
 stages:
   - build
-  - image
+  - test
+  - package
 
-build:app:
+build:go:
   stage: build
   image: andrexus/golang-dep
   tags:
     - runner:k8s
+
   script:
     - time dep ensure
     - go build
+  variables:
+    GOPATH: /build
+
   artifacts:
     paths:
       - home-dns
@@ -18,26 +23,24 @@ build:app:
   cache:
     key: "${CI_COMMIT_REF_SLUG}"
     untracked: true
-  variables:
-    GOPATH: /build
 
-build:image:
-  stage: image
-  image: docker
+package:docker:
+  stage: package
+  image: docker:stable
   services:
-    - docker:dind
+    - docker:stable-dind
   tags:
     - runner:k8s
-  script:
-    # prep secrets
+
+  dependencies:
+    - build:go
+  before_script:
     - mkdir /root/.docker
     - ln -s /secrets/docker /root/.docker/config.json
     - docker info
-    # build it
+  script:
     - docker build -t $IMAGE_TAG .
     - docker push $IMAGE_TAG
-  dependencies:
-    - build:app
   variables:
     DOCKER_DRIVER: overlay2
     DOCKER_HOST: tcp://localhost:2375
