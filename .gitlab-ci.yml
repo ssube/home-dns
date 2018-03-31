@@ -40,7 +40,7 @@ test:go:
     - build:go
   script:
     - go test
-   variables:
+  variables:
     GOPATH: /build
 
 package:docker:
