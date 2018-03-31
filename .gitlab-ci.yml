@@ -4,11 +4,14 @@ stages:
   - test
   - package
 
-build:go:
-  stage: build
+.go: &go-job
   image: andrexus/golang-dep
   tags:
     - runner:k8s
+
+build:go:
+  <<: *go-job
+  stage: build
 
   script:
     - time dep ensure
@@ -22,7 +25,23 @@ build:go:
     expire_in: 1 hour
   cache:
     key: "${CI_COMMIT_REF_SLUG}"
-    untracked: true
+    policy: pull-push
+    paths:
+      - vendor
+
+test:go:
+  <<: *go-job
+  stage: test
+
+  cache:
+    key: "${CI_COMMIT_REF_SLUG}"
+    policy: pull
+  dependencies:
+    - build:go
+  script:
+    - go test
+   variables:
+    GOPATH: /build
 
 package:docker:
   stage: package
