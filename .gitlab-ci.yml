@@ -28,6 +28,7 @@ build:go:
     policy: pull-push
     paths:
       - vendor
+      - /build/src
 
 test:go:
   <<: *go-job
