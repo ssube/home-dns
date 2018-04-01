@@ -1,4 +1,4 @@
-FROM apextoaster/base
+FROM apextoaster/base:master
 
 ADD ./home-dns /app/home-dns
 
