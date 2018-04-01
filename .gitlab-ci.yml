@@ -29,7 +29,6 @@ build:go:
     policy: pull-push
     paths:
       - vendor
-      - /build/src
 
 package:docker:
   stage: package
