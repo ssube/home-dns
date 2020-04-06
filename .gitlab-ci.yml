@@ -50,7 +50,7 @@ build-image:
   variables:
     DOCKER_DRIVER: overlay2
     DOCKER_HOST: tcp://localhost:237
-
+    IMAGE_ARCH: ubuntu
 
 github-pending:
   stage: status-pre
