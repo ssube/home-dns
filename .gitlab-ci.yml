@@ -1,6 +1,8 @@
 stages:
+  - status-pre
   - build
   - image
+  - status-post
 
 build-go:
   stage: build
@@ -48,3 +50,27 @@ build-image:
   variables:
     DOCKER_DRIVER: overlay2
     DOCKER_HOST: tcp://localhost:237
+
+
+github-pending:
+  stage: status-pre
+  extends:
+    - .build-base
+  script:
+    - ./scripts/github-status.sh pending
+
+github-failure:
+  stage: status-post
+  extends:
+    - .build-base
+  when: on_failure
+  script:
+    - ./scripts/github-status.sh failure
+
+github-success:
+  stage: status-post
+  extends:
+    - .build-base
+  when: on_success
+  script:
+    - ./scripts/github-status.sh success
