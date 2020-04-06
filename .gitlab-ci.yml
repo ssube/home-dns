@@ -1,20 +1,15 @@
-# build the go app, then wrap it in an image
 stages:
   - build
-  - test
-  - package
+  - image
 
-.go: &go-job
-  image: andrexus/golang-dep
-  tags:
-    - runner:k8s
-
-build:go:
-  <<: *go-job
+build-go:
   stage: build
+  image: apextoaster/golang:1.14
+  tags:
+    - platform:k8s
+    - runner:shared
 
   script:
-    - time dep ensure
     - time go build
     - time go test
   variables:
@@ -30,24 +25,26 @@ build:go:
     paths:
       - vendor
 
-package:docker:
-  stage: package
-  image: docker:stable
+build-image:
+  stage: image
+  image: apextoaster/docker:18.09
   services:
-    - docker:stable-dind
+    - apextoaster/docker-dind:18.09
   tags:
+    - platform:k8s
     - runner:k8s
-
   dependencies:
-    - build:go
+    - build-go
+  allow_failure: false
+
   before_script:
-    - mkdir /root/.docker
-    - ln -s /secrets/docker /root/.docker/config.json
+    - mkdir ${HOME}/.docker
+    - echo "${DOCKER_SECRET}" | base64 -d > ${HOME}/.docker/config.json
   script:
-    - docker info
-    - docker build -t $IMAGE_TAG .
-    - docker push $IMAGE_TAG
+    - ${CI_PROJECT_DIR}/scripts/docker-build.sh --push
+  after_script:
+    - rm -rfv ${HOME}/.docker
+
   variables:
     DOCKER_DRIVER: overlay2
-    DOCKER_HOST: tcp://localhost:2375
-    IMAGE_TAG: ssube/home-dns:$CI_COMMIT_REF_SLUG
+    DOCKER_HOST: tcp://localhost:237
