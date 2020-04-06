@@ -1,5 +1,6 @@
 stages:
   - status-pre
+  - test
   - build
   - image
   - status-post
@@ -10,50 +11,116 @@ stages:
     - platform:k8s
     - runner:shared
 
-build-go:
+.build-go:
   extends:
     - .build-base
   stage: build
-  image: apextoaster/golang:1.14
-  script:
-    - time go build
-    - time go test
+  image: apextoaster/golang:1.14-master
   variables:
     GOPATH: /build
+    BUILD_OPTS: -a -v -x
+
+  before_script:
+    - make go-clean
 
   artifacts:
-    paths:
-      - home-dns
     expire_in: 1 hour
-  cache:
-    key: "${CI_COMMIT_REF_SLUG}"
-    policy: pull-push
+    paths:
+      - bin/
+
+  cache: &go-cache
     paths:
       - vendor
+    policy: pull
 
-build-image:
+test-go:
+  extends:
+    - .build-go
+  stage: test
+  script:
+    - make go-test
+  cache:
+    <<: *go-cache
+    policy: pull-push
+
+build-go-darwin-x86:
+  extends:
+    - .build-go
+  script:
+    - GOOS=darwin GOARCH=386 make go-build
+    - GOOS=darwin GOARCH=amd64 make go-build
+
+build-go-linux-arm:
+  extends:
+    - .build-go
+  script:
+    - GOOS=linux GOARCH=arm make go-build
+    - GOOS=linux GOARCH=arm64 make go-build
+
+build-go-linux-x86:
+  extends:
+    - .build-go
+  script:
+    - GOOS=linux GOARCH=386 make go-build
+    - GOOS=linux GOARCH=amd64 make go-build
+
+build-go-windows-x86:
+  extends:
+    - .build-go
+  script:
+    - GOOS=windows GOARCH=386 make go-build
+    - GOOS=windows GOARCH=amd64 make go-build
+
+# always build an image (tagged by branch), publish tags to latest
+.build-docker:
   extends:
     - .build-base
-  stage: image
   image: apextoaster/docker:18.09
   services:
     - apextoaster/docker-dind:18.09
-  dependencies:
-    - build-go
-  allow_failure: false
+  variables: &vars-docker
+    DOCKER_DRIVER: overlay2
+    DOCKER_HOST: tcp://localhost:2375
 
   before_script:
     - mkdir ${HOME}/.docker
     - echo "${DOCKER_SECRET}" | base64 -d > ${HOME}/.docker/config.json
   script:
-    - ${CI_PROJECT_DIR}/scripts/docker-build.sh --push
+    - ./scripts/docker-build.sh --push --default
   after_script:
     - rm -rfv ${HOME}/.docker
 
+build-image:
+  extends:
+    - .build-docker
+  stage: image
+ 
+  dependencies:
+    - build-go-linux-x86
   variables:
-    DOCKER_DRIVER: overlay2
-    DOCKER_HOST: tcp://localhost:2375
     IMAGE_ARCH: ubuntu
+
+build-binary:
+  extends:
+    - .build-base
+  stage: image
+  only:
+    - master
+    - tags
+
+  dependencies:
+    - build-go-darwin-x86
+    - build-go-linux-arm
+    - build-go-linux-x86
+    - build-go-windows-x86
+
+  script:
+    - make bundle-all
+
+  artifacts:
+    expire_in: 1 day
+    paths:
+      - bin/
 
 github-pending:
   stage: status-pre
