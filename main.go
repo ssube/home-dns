@@ -11,7 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/route53"
 
-	"gopkg.in/robfig/cron.v2"
+	"github.com/robfig/cron/v3"
 	yaml "gopkg.in/yaml.v2"
 )
 
