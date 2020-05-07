@@ -3,7 +3,7 @@ module github.com/ssube/home-dns
 go 1.13
 
 require (
-	github.com/aws/aws-sdk-go v1.30.21
+	github.com/aws/aws-sdk-go v1.30.22
 	github.com/go-ini/ini v1.55.0
 	github.com/jmespath/go-jmespath v0.3.0
 	github.com/robfig/cron/v3 v3.0.1
