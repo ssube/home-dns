@@ -7,5 +7,5 @@ require (
 	github.com/go-ini/ini v1.56.0
 	github.com/jmespath/go-jmespath v0.3.0
 	github.com/robfig/cron/v3 v3.0.1
-	gopkg.in/yaml.v2 v2.2.8
+	gopkg.in/yaml.v2 v2.3.0
 )
