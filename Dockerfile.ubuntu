@@ -1,4 +1,4 @@
-FROM apextoaster/base:1.4-master
+FROM apextoaster/base:1.5-master
 
 COPY ./bin/home-dns-linux-amd64 /app/home-dns
 
