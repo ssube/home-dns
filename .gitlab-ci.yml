@@ -77,7 +77,7 @@ build-go-windows-x86:
     - .build-base
   image: apextoaster/docker:18.09
   services:
-    - apextoaster/docker-dind:18.09
+    - apextoaster/docker-dind:20.10
   variables: &vars-docker
     DOCKER_DRIVER: overlay2
     DOCKER_HOST: tcp://localhost:2375
